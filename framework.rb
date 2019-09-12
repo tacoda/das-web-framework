@@ -7,9 +7,9 @@ class App
     request = Rack::Request.new(env)
     @routes.each do |route|
       content = route.match(request)
-      return [200, {}, [content]] if content
+      return [200, {'Content-Type' => 'text/plain'}, [content.to_s]] if content
     end
-    [404, {}, ["not found"]]
+    [404, {'Content-Type' => 'text/plain'}, ["not found"]]
   end
 end
 
@@ -41,7 +41,7 @@ class Route < Struct.new(:route_spec, :block)
       is_var = spec_comp.start_with?(':')
       if is_var
         key = spec_comp.sub(/\A:/, '')
-        params[key] = path_comp
+        params[key] = URI.decode(path_comp)
       else
         return nil unless path_comp == spec_comp
       end
