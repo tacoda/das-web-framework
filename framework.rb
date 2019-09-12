@@ -31,10 +31,22 @@ end
 
 class Route < Struct.new(:route_spec, :block)
   def match(request)
-    if request.path == route_spec
-      block.call
-    else
-      nil
+    path_components = request.path.split('/')
+    spec_components = route_spec.split('/')
+    params = {}
+
+    return nil unless path_components.length == spec_components.length
+
+    path_components.zip(spec_components).each do |path_comp, spec_comp|
+      is_var = spec_comp.start_with?(':')
+      if is_var
+        key = spec_comp.sub(/\A:/, '')
+        params[key] = path_comp
+      else
+        return nil unless path_comp == spec_comp
+      end
     end
+
+    block.call(params)
   end
 end
