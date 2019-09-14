@@ -7,3 +7,10 @@ $ psql framework_dev
 # create table submissions(name text);
 # insert into submissions(name) values ('Gary');
 ```
+
+
+```
+$ psql framework_dev
+
+# create table submissions(name text);
+```
