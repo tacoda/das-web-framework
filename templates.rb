@@ -1,6 +1,16 @@
+require 'ostruct'
 require 'pp'
 
 class Templates
+  def initialize(base_dir)
+    @base_dir = base_dir
+  end
+
+  def method_missing(name, params={})
+    source = File.read("#{@base_dir}/#{name}.template")
+    Template.new(source).render(params)
+  end
+
   class Template
     def initialize(source)
       @source = source
@@ -13,6 +23,7 @@ class Templates
       nodes = lines.map { |line| build_node(line) }
       tree = build_tree(nodes)
       pp tree
+      tree.render(params) + "\n"
     end
 
     def build_node(line)
@@ -45,11 +56,25 @@ class Templates
   end
 
   class TextNode < Struct.new(:indent, :text)
+    def render(params)
+      " " * (indent * 2) + text
+    end
   end
 
   class CodeNode < Struct.new(:indent, :code)
+    def render(params)
+      params_binding = OpenStruct.new(params).instance_eval { binding }
+      " " * (indent * 2) + eval(code, params_binding).to_s
+    end
   end
 
   class TagNode < Struct.new(:indent, :tag_name, :children)
+    def render(params)
+      [
+        " " * (indent * 2) + "<#{tag_name}>",
+        children.map { |child| child.render(params) },
+        " " * (indent * 2) + "</#{tag_name}>",
+      ].flatten.join("\n")
+    end
   end
 end

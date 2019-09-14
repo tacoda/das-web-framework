@@ -1,9 +1,12 @@
 require_relative './framework'
 require_relative './database'
 require_relative './queries'
+require_relative './templates'
 
 DB = Database.connect('postgres://localhost/framework_dev',
                       QUERIES)
+
+TEMPLATES = Templates.new('views')
 
 APP = App.new do
   get '/' do
@@ -21,7 +24,7 @@ APP = App.new do
 
   get '/submissions/:name' do |params|
     name = params.fetch('name')
-    user = DB.find_submission_by_name.fetch(name)
-    "The user is #{user}"
+    user = DB.find_submission_by_name(name: name).fetch(0)
+    TEMPLATES.submissions_show(user: user)
   end
 end
